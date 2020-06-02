@@ -26,6 +26,12 @@ class TweetsDao {
                 {
                     model: models.tweets,
                     as: 'thread',
+                    // get the thread user's info
+                    include: [{
+                        model: models.users,
+                        as: 'user',
+                        attributes: ['id', 'name']
+                    }]
                 }
             ];
 
