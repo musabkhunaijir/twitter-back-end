@@ -1,10 +1,10 @@
 const models = require('../models')
-const users = models.users;
+const usersModel = models.users;
 
 class UsersDao {
     async create(user = {}) {
         try {
-            const result = await users.create(user);
+            const result = await usersModel.create(user);
             return result;
         } catch (error) {
             return Promise.reject(error);
@@ -13,8 +13,13 @@ class UsersDao {
 
     async findOne({ where }) {
         try {
-            const result = await users.findOne({ where });
-            return result.get({ plain: true });
+            const result = await usersModel.findOne({ where });
+
+            if (result) {
+                return result.get({ plain: true });
+            }
+
+            return result;
         } catch (error) {
             return Promise.reject(error);
         }

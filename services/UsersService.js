@@ -28,6 +28,14 @@ class UsersService {
                 })
             }
 
+            // check that the passwords are matched
+            if (user.password !== user.passwordConfirmation) {
+                return Promise.reject({
+                    status: httpStatus.BAD_REQUEST,
+                    message: 'password mismatch'
+                })
+            }
+
             // check that the provided user email doesn't exists
             const isUser = await new UsersDao().findOne({ where: { email: user.email } });
             if (isUser) {
@@ -37,15 +45,13 @@ class UsersService {
                 })
             }
 
-            const result = await new UsersDao().create({
+            await new UsersDao().create({
                 name: user.name,
                 email: user.email.toLowerCase(),
                 password: sha1(user.password)
             });
 
-            delete user.password;
-
-            return result;
+            return { created: true };
         } catch (error) {
             return Promise.reject(error)
         }
@@ -81,6 +87,15 @@ class UsersService {
             return { token };
         } catch (error) {
             return Promise.reject(error)
+        }
+    }
+
+    async getUser({ where }) {
+        try {
+            const result = await new UsersDao().findOne({ where });
+            return result;
+        } catch (error) {
+            return Promise.reject(error);
         }
     }
 };

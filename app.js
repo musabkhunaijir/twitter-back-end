@@ -5,6 +5,7 @@ const logger = require('morgan');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+const tweetsRouter = require('./routes/tweets');
 
 const app = express();
 
@@ -19,5 +20,6 @@ const apiVersion = '/v1';
 
 app.use(`${apiVersion}/`, indexRouter);
 app.use(`${apiVersion}/users`, usersRouter);
+app.use(`${apiVersion}/tweets`, tweetsRouter);
 
 module.exports = app;
