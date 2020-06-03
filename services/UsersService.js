@@ -4,6 +4,7 @@ const sha1 = require('sha1');
 const inputValidation = require('../utils/input_validation');
 const UsersDao = require('../daos/UsersDao');
 const auth = require('../utils/auth');
+const handleErrors = require('../utils/handle_errors');
 
 const registerSchema = hapiJoi.object({
     name: hapiJoi.string().required(),
@@ -22,7 +23,7 @@ class UsersService {
         try {
             const isError = inputValidation.validate(user, registerSchema);
             if (isError.error) {
-                return Promise.reject({
+                return handleErrors.reject({
                     status: httpStatus.BAD_REQUEST,
                     message: isError.error.details[0].message
                 })
@@ -30,7 +31,7 @@ class UsersService {
 
             // check that the passwords are matched
             if (user.password !== user.passwordConfirmation) {
-                return Promise.reject({
+                return handleErrors.reject({
                     status: httpStatus.BAD_REQUEST,
                     message: 'password mismatch'
                 })
@@ -39,7 +40,7 @@ class UsersService {
             // check that the provided user email doesn't exists
             const isUser = await new UsersDao().findOne({ where: { email: user.email } });
             if (isUser) {
-                return Promise.reject({
+                return handleErrors.reject({
                     status: httpStatus.CONFLICT,
                     message: 'email already exists'
                 })
@@ -61,7 +62,7 @@ class UsersService {
         try {
             const isError = inputValidation.validate(user, loginSchema);
             if (isError.error) {
-                return Promise.reject({
+                return handleErrors.reject({
                     status: httpStatus.BAD_REQUEST,
                     message: isError.error.details[0].message
                 })
@@ -75,7 +76,7 @@ class UsersService {
                 }
             });
             if (!isUser) {
-                return Promise.reject({
+                return handleErrors.reject({
                     status: httpStatus.NOT_FOUND,
                     message: 'user not found'
                 })
