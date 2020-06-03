@@ -20,4 +20,8 @@ router.route('/:tweetId/thread')
 router.route('/my_tweets')
   .get(tweetsController.myTweets);
 
+router.route('/:tweetId')
+  .put(tweetsController.updateTweet)
+  .delete(tweetsController.deleteTweet);
+
 module.exports = router;

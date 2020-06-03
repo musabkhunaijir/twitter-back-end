@@ -4,6 +4,7 @@ const sha1 = require('sha1');
 const inputValidation = require('../utils/input_validation');
 const TweetsDao = require('../daos/TweetsDao');
 const UsersService = require('./UsersService');
+const handelErrors = require('../utils/handel_errors');
 
 const tweetSchema = hapiJoi.object({
     content: hapiJoi.string().required(),
@@ -20,8 +21,13 @@ const myTweetsSchema = hapiJoi.object({
     userId: hapiJoi.number().required(),
 });
 
-const tweetThreadSchema = hapiJoi.object({
+const singleTweetSchema = hapiJoi.object({
     tweetId: hapiJoi.number().required(),
+});
+
+const updateTweetSchema = hapiJoi.object({
+    tweetId: hapiJoi.number().required(),
+    content: hapiJoi.string().required(),
 });
 
 class TweetsService {
@@ -135,7 +141,7 @@ class TweetsService {
 
     async getTweetThread({ tweetThread = {}, pageNumber }) {
         try {
-            const isError = inputValidation.validate(tweetThread, tweetThreadSchema);
+            const isError = inputValidation.validate(tweetThread, singleTweetSchema);
             if (isError.error) {
                 return Promise.reject({
                     status: httpStatus.BAD_REQUEST,
@@ -146,6 +152,95 @@ class TweetsService {
             const result = await new TweetsDao().getTweets({ where: { id: tweetThread.tweetId }, pageNumber });
 
             return result;
+        } catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
+    async updateTweet({ tweet = {}, reqUserId }) {
+        try {
+            const isError = inputValidation.validate(tweet, updateTweetSchema);
+            if (isError.error) {
+                return Promise.reject({
+                    status: httpStatus.BAD_REQUEST,
+                    message: isError.error.details[0].message
+                })
+            }
+
+            // check that the provided user id does exists
+            const isUser = await new UsersService().getUser({ where: { id: reqUserId } });
+            if (!isUser) {
+                return Promise.reject({
+                    status: httpStatus.NOT_FOUND,
+                    message: 'user not found'
+                })
+            }
+
+            // check that the provided tweet id does exists, (parent tweet)
+            const isTweet = await new TweetsDao().findOne({ where: { id: tweet.tweetId } });
+            if (!isTweet) {
+                return Promise.reject({
+                    status: httpStatus.NOT_FOUND,
+                    message: 'tweet not found'
+                })
+            }
+
+            if (reqUserId !== isTweet.userId) {
+                return handelErrors.reject({ status: httpStatus.FORBIDDEN, message: 'FORBIDDEN' })
+            }
+
+            // check that user is authorized to delete the tweet
+
+            await new TweetsDao().updateTweet({
+                attributes: { content: tweet.content },
+                where: { id: tweet.tweetId }
+            });
+
+            return { status: httpStatus.OK };
+        } catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
+    async deleteTweet({ tweet = {}, reqUserId }) {
+        try {
+            const isError = inputValidation.validate(tweet, singleTweetSchema);
+            if (isError.error) {
+                return Promise.reject({
+                    status: httpStatus.BAD_REQUEST,
+                    message: isError.error.details[0].message
+                })
+            }
+
+            // check that the provided user id does exists
+            const isUser = await new UsersService().getUser({ where: { id: reqUserId } });
+            if (!isUser) {
+                return Promise.reject({
+                    status: httpStatus.NOT_FOUND,
+                    message: 'user not found'
+                })
+            }
+
+            // check that the provided tweet id does exists, (parent tweet)
+            const isTweet = await new TweetsDao().findOne({ where: { id: tweet.tweetId } });
+            if (!isTweet) {
+                return Promise.reject({
+                    status: httpStatus.NOT_FOUND,
+                    message: 'tweet not found'
+                })
+            }
+
+            if (reqUserId !== isTweet.userId) {
+                return handelErrors.reject({ status: httpStatus.FORBIDDEN, message: 'FORBIDDEN' })
+            }
+
+            // check that user is authorized to delete the tweet
+
+            await new TweetsDao().deleteTweet({
+                where: { id: tweet.tweetId }
+            });
+
+            return { status: httpStatus.OK };
         } catch (error) {
             return Promise.reject(error)
         }

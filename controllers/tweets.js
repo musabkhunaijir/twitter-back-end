@@ -78,4 +78,35 @@ module.exports = {
         }
     },
 
+    async updateTweet(req, response) {
+        try {
+            const { tweetId } = req.params;
+            const { content } = req.body;
+            const { userId } = req.userInfo;
+
+            const result = await new TweetsService().updateTweet({ tweet: { tweetId, content }, reqUserId: userId });
+
+            return response.status(200).send(result);
+        } catch (error) {
+            console.error({ error });
+
+            return response.status(error.status ? error.status : 500).send(error);
+        }
+    },
+
+    async deleteTweet(req, response) {
+        try {
+            const { tweetId } = req.params;
+            const { userId } = req.userInfo;
+
+            const result = await new TweetsService().deleteTweet({ tweet: { tweetId }, reqUserId: userId });
+
+            return response.status(200).send(result);
+        } catch (error) {
+            console.error({ error });
+
+            return response.status(error.status ? error.status : 500).send(error);
+        }
+    },
+
 }

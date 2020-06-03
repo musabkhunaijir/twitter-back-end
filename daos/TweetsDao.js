@@ -61,6 +61,24 @@ class TweetsDao {
             return Promise.reject(error);
         }
     }
+
+    async updateTweet({ attributes = {}, where = {} } = {}) {
+        try {
+            const result = await tweetsModel.update(attributes, { where });
+            return result;
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
+
+    async deleteTweet({ where = {} } = {}) {
+        try {
+            const result = await tweetsModel.destroy({ where });
+            return result;
+        } catch (error) {
+            return Promise.reject(error);
+        }
+    }
 };
 
 module.exports = TweetsDao;
